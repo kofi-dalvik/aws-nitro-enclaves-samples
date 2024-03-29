@@ -6,7 +6,8 @@
 import argparse
 import socket
 import sys
-
+import json
+import traceback
 
 class VsockStream:
     """Client"""
@@ -40,10 +41,16 @@ class VsockStream:
 def client_handler(args):
     client = VsockStream()
     endpoint = (args.cid, args.port)
-    client.connect(endpoint)
-    msg = 'Hello, world!'
-    client.send_data(msg.encode())
-    client.disconnect()
+    try:
+        client.connect(endpoint)
+        msg = 'Hello, world!'
+        client.send_data(msg.encode())
+        response = client.recv_data()
+        print("Received response:", response.decode())
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        client.disconnect()
 
 
 class VsockListener:
@@ -56,6 +63,15 @@ class VsockListener:
         self.sock = socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM)
         self.sock.bind((socket.VMADDR_CID_ANY, port))
         self.sock.listen(self.conn_backlog)
+        
+    def process_request(self, data: bytes) -> bytes:
+        data = data.decode('utf-8')
+        print('data received: ', data)
+        res: dict = {
+            'request': data,
+            'response': 'sample response'
+        }
+        return json.dumps(res).encode() 
 
     def recv_data(self):
         """Receive data from a remote endpoint"""
@@ -63,22 +79,25 @@ class VsockListener:
         
         while True:
             (from_client, (remote_cid, remote_port)) = self.sock.accept()
-            # Read 1024 bytes at a time
-            while True:
-                try:
-                    data = from_client.recv(1024).decode()
-                except socket.error:
-                    break
-                if not data:
-                    break
-                data_received.extend(data)
-            
-            # Decode and use the data
-            decoded_data = bytes(data_received).decode('utf-8')
-            print('data received: ', data_received)
-            print('decoded data', decoded_data)
-            
-            from_client.close()
+            try:
+                # Read 1024 bytes at a time
+                while True:
+                    try:
+                        data = from_client.recv(1024)
+                    except socket.error:
+                        break
+                    if not data:
+                        break
+                    data_received.extend(data)
+                
+                # Decode and process the data
+                res: bytes = self.process_request(bytes(data_received))
+                # Send response to client
+                from_client.sendall(res)
+            except Exception as e:
+                traceback.print_exc()
+            finally:
+                from_client.close()
 
     def send_data(self, data):
         """Send data to a renote endpoint"""

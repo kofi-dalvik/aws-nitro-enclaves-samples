@@ -1,0 +1,8 @@
+{
+    "enclave_name": "vsock_sample_server",
+    "cpu_count": 2,
+    "memory_mib": 256,
+    "eif_path": "vsock_sample_server.eif",
+    "enclave_cid": 16,
+    "debug_mode": true
+}
