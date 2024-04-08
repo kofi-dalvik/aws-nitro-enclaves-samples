@@ -1,31 +1,30 @@
-import socket
+import socket 
 
-address: tuple = (socket.gethostbyname(socket.gethostname()), 5005)
+PORT = 5005
+HEADER = 64
+FORMAT = "utf-8"
+DISCONNECT_MESSAGE = "!disconnect!"
+SERVER = socket.gethostbyname(socket.gethostname())
+ADDR = (SERVER, PORT)
 
-def recv(sock: socket.socket) -> bytes:
-    data: bytearray = bytearray()
-    while True:
-        chunk = sock.recv(1024)
-        print(f'Received chunk data: {chunk.decode()}')
-        if not chunk:
-            break
-        data.extend(chunk)
-    return bytes(data)
+def connnect():
+    client: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect(ADDR)
+    return client
 
-def main(data: bytes) -> bytes:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect(address)
-    for i in range(0, len(data), 10):
-        sock.send(data[i:10])
-    sock.send(b'Done')
+def send(conn: socket.socket, msg: str):
+    message = msg.encode(FORMAT)
+    msg_length = len(message)
+    send_length = str(msg_length).encode(FORMAT)
+    send_length += b" " * (HEADER - len(send_length))
     
-    res: bytes = recv(sock=sock)
-    print('Server Res: ', res.decode())
-    sock.close()
-    return res
+    conn.send(send_length)
+    conn.send(message)
+    # client.send(DISCONNECT_MESSAGE.encode(FORMAT))
+    print(conn.recv(2048).decode(FORMAT))
     
-    
-    
-    
+
 if __name__ == "__main__":
-    main(b'hello world' * 10)
+    connection: socket.socket = connnect()
+    send(connection, 'Hello World!')
+    send(connection, DISCONNECT_MESSAGE)
