@@ -5,9 +5,9 @@ HEADER = 64
 FORMAT = "utf-8"
 BUFFER_SIZE = 2048
 DISCONNECT_MESSAGE = "<<EOT>>"
-SERVER = socket.gethostbyname(socket.gethostname())
+SERVER = socket.VMADDR_CID_ANY # socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
-SOCK_FAMILY = socket.AF_INET
+SOCK_FAMILY = socket.AF_VSOCK
 SOCK_TYPE = socket.SOCK_STREAM
 
 def server_create(address: tuple = None) -> socket.socket:
@@ -18,6 +18,7 @@ def server_create(address: tuple = None) -> socket.socket:
 
 def connect(address: tuple = None) -> socket.socket:
     client: socket.socket = socket.socket(SOCK_FAMILY, SOCK_TYPE)
+    client.settimeout(5)
     client.connect(address if address else ADDR)
     return client
 

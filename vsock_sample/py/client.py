@@ -1,8 +1,10 @@
 import socket, hashlib
 import vsock
 
+SERVER = (16, 5005) # SET to None if running locally
+
 if __name__ == "__main__":
-    connection: socket.socket = vsock.connect()
+    connection: socket.socket = vsock.connect(address=SERVER)
     msg: str = 'Hello World!' * (1024)
     vsock.send(connection, msg=msg)
     res: str = vsock.response_recv(connection)

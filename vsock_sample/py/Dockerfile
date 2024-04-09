@@ -4,6 +4,7 @@
 FROM python:3.7.9-alpine3.12
 
 COPY vsock.py .
+
 COPY server.py .
 
-CMD ["/usr/local/bin/python3", "server.py", "server", "5005"]
+CMD ["/usr/local/bin/python3", "server.py"]
