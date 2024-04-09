@@ -4,7 +4,7 @@ PORT = 5005
 HEADER = 64
 FORMAT = "utf-8"
 BUFFER_SIZE = 2048
-DISCONNECT_MESSAGE = "!disconnect!"
+DISCONNECT_MESSAGE = "<<EOT>>"
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 SOCK_FAMILY = socket.AF_INET
@@ -16,10 +16,14 @@ def server_create(address: tuple = None) -> socket.socket:
     server.listen()
     return server
 
-def client_create(address: tuple = None) -> socket.socket:
+def connect(address: tuple = None) -> socket.socket:
     client: socket.socket = socket.socket(SOCK_FAMILY, SOCK_TYPE)
     client.connect(address if address else ADDR)
     return client
+
+def disconnect(conn: socket.socket):
+    send(conn, DISCONNECT_MESSAGE)
+    conn.close()
 
 def recv_fixed_msg(conn: socket.socket, msg_length: int):
     msg = ''
